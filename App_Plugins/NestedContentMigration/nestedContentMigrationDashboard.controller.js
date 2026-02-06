@@ -68,6 +68,12 @@ angular.module("umbraco").controller("NestedContentMigrationDashboardController"
     });
 
     vm.updateProperty = function (item) {
+        // Validatie: check of er een nieuwe alias is ingevoerd
+        if (!item.newAlias || item.newAlias.trim() === '') {
+            notificationsService.error("Validatie fout", "Voer eerst een nieuwe alias in.");
+            return;
+        }
+
         // Set loading state voor deze specifieke button
         item.isUpdating = true;
 
@@ -80,6 +86,12 @@ angular.module("umbraco").controller("NestedContentMigrationDashboardController"
         ncResource.update(postData).then(function (response) {
             notificationsService.success("Succes", "De property is bijgewerkt.");
             vm.loadUserLogs();
+
+            // Ververs de audit data om de status indicators bij te werken
+            ncResource.getAll().then(function (auditResponse) {
+                vm.AuditResult = auditResponse || [];
+            });
+
             // Verwijder loading state na succesvolle update
             item.isUpdating = false;
         }, function (error) {

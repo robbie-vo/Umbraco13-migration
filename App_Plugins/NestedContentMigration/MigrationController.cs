@@ -105,11 +105,22 @@ namespace UmbracoVO.Controllers
             var report = allContentTypes
                 .SelectMany(ct => ct.PropertyTypes
                     .Where(p => p.PropertyEditorAlias == nestedContentAlias)
-                    .Select(p => new
+                    .Select(p =>
                     {
-                        DocTypeAlias = ct.Alias,
-                        PropertyAlias = p.Alias,
-                        PropertyName = p.Name
+                        // Check of er al een property bestaat met dezelfde Name maar andere Alias
+                        // Dit geeft aan of de migratie al is uitgevoerd
+                        var duplicateProperty = ct.PropertyTypes
+                            .FirstOrDefault(x => x.Name == p.Name && x.Alias != p.Alias);
+
+                        return new
+                        {
+                            DocTypeAlias = ct.Alias,
+                            PropertyAlias = p.Alias,
+                            PropertyName = p.Name,
+                            HasDuplicate = duplicateProperty != null,
+                            DuplicateAlias = duplicateProperty?.Alias,
+                            DuplicateEditorAlias = duplicateProperty?.PropertyEditorAlias
+                        };
                     }))
                 .ToList();
 

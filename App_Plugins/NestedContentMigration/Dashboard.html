@@ -21,14 +21,25 @@
                 <uui-box headline="Document type: {{item.docTypeAlias}}" ng-repeat="item in vm.AuditResult track by $index" style="margin: 2rem 0;">
                     <strong>Nested Content - Property alias:</strong> {{item.propertyAlias}}<br />
                     <strong>Nested Content - Property name:</strong> {{item.propertyName}}<br />
+
+                    <div ng-if="item.hasDuplicate" style="margin-top: 10px; padding: 10px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724;">
+                        <strong>✓ Migratie al uitgevoerd!</strong><br />
+                        Er bestaat al een property met naam "{{item.propertyName}}" en alias "{{item.duplicateAlias}}"<br />
+                        <small>Editor type: {{item.duplicateEditorAlias}}</small>
+                    </div>
+
+                    <div ng-if="!item.hasDuplicate" style="margin-top: 10px; padding: 10px; background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px; color: #856404;">
+                        <strong>⚠ Nog niet gemigreerd</strong><br />
+                        <small>Er is nog geen BlockList property met dezelfde naam aangemaakt</small>
+                    </div>
                     <br />
-                    <div style="margin-top: 10px; display: flex; gap: 10px;">
+                    <div style="margin-top: 10px; display: flex; gap: 10px; align-items: center;">
 
                         <input type="text"
                                ng-model="item.newAlias"
                                placeholder="Voer nieuwe alias in..."
                                class="umb-textstring"
-                               style="flex-grow: 1;" />
+                               style="flex-grow: 1;margin-bottom: 0;border-radius: 3px;" />
 
                         <uui-button look="primary"
                                     color="positive"
