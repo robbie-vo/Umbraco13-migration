@@ -1,0 +1,59 @@
+<div class="welcome-dashboard" ng-controller="NestedContentMigrationDashboardController as vm">
+
+    <div class="row">
+        <h3 class="bold ng-scope">
+            Nested Content Migratie
+        </h3>
+        <p>Migreer Nested Content automatisch naar BlockList.</p>
+    </div>
+    <div class="row ng-scope">
+        <div class="column span6">
+      
+            <div style="margin: 2rem 0;">
+
+                <umb-load-indicator ng-if="vm.loading"></umb-load-indicator>
+
+                <!--<pre>{{ vm.AuditResult | json }}</pre>-->
+                <div ng-if="vm.AuditResult.length === 0">
+                    Laden of geen data gevonden...
+                </div>
+
+                <uui-box headline="Document type: {{item.docTypeAlias}}" ng-repeat="item in vm.AuditResult track by $index" style="margin: 2rem 0;">
+                    <strong>Nested Content - Property alias:</strong> {{item.propertyAlias}}<br />
+                    <strong>Nested Content - Property name:</strong> {{item.propertyName}}<br />
+                    <br />
+                    <div style="margin-top: 10px; display: flex; gap: 10px;">
+
+                        <input type="text"
+                               ng-model="item.newAlias"
+                               placeholder="Voer nieuwe alias in..."
+                               class="umb-textstring"
+                               style="flex-grow: 1;" />
+
+                        <uui-button look="primary"
+                                    color="positive"
+                                    label="Update"
+                                    ng-click="vm.updateProperty(item)">
+                            Update
+                        </uui-button>
+                    </div>
+
+
+                </uui-box>
+
+
+            </div>
+        </div>
+        <div class="column span6">
+            <uui-box headline="Recent aangepast door gebruiker: {{vm.UserName}}" style="margin: 2rem;">
+                <ul class="unstyled">
+                    <li ng-repeat="logEntry in vm.UserLogHistory.items" style="padding: 3px 0;">
+                        <i class="{{logEntry.Content.icon}}"></i> <a href="/Umbraco/#/{{logEntry.editUrl}}">{{logEntry.Content.name}} <span ng-if="logEntry.comment">- {{logEntry.comment}}</span></a> - <span style="color: #73716e;" class="text-muted">Edited on: {{logEntry.timestamp  | date:'medium'}}</span>
+                    </li>
+                </ul>
+            </uui-box>
+        </div>
+    </div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@latest/dist/uui.min.js"></script>
