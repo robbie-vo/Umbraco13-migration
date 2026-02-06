@@ -32,8 +32,8 @@
 
                         <uui-button look="primary"
                                     color="positive"
-                                    label="Update"
-                                    ng-click="vm.updateProperty(item)">
+                                    ng-click="vm.updateProperty(item)"
+                                    ng-attr-state="{{item.isUpdating ? 'waiting' : undefined}}">
                             Update
                         </uui-button>
                     </div>

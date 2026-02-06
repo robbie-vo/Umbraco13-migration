@@ -68,6 +68,9 @@ angular.module("umbraco").controller("NestedContentMigrationDashboardController"
     });
 
     vm.updateProperty = function (item) {
+        // Set loading state voor deze specifieke button
+        item.isUpdating = true;
+
         var postData = {
             docTypeAlias: item.docTypeAlias,
             propertyAlias: item.propertyAlias,
@@ -76,11 +79,13 @@ angular.module("umbraco").controller("NestedContentMigrationDashboardController"
 
         ncResource.update(postData).then(function (response) {
             notificationsService.success("Succes", "De property is bijgewerkt.");
-
             vm.loadUserLogs();
-
+            // Verwijder loading state na succesvolle update
+            item.isUpdating = false;
         }, function (error) {
             notificationsService.error("Fout", "Er ging iets mis bij het updaten.");
+            // Verwijder loading state ook bij een fout
+            item.isUpdating = false;
         });
     };
 });
