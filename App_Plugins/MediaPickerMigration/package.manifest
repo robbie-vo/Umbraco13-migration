@@ -1,0 +1,18 @@
+{
+  "dashboards": [
+    {
+      "alias": "mediaPickerMigrationDashboard",
+      "view": "/App_Plugins/MediaPickerMigration/Dashboard.html",
+      "sections": [ "content" ],
+      "weight": -9,
+      "access": [
+        { "deny": "translator" },
+        { "grant": "admin" }
+      ]
+    }
+  ],
+  "javascript": [
+    "~/App_Plugins/MediaPickerMigration/mediaPickerDashboard.controller.js",
+    "~/App_Plugins/MediaPickerMigration/mp.resource.js"
+  ]
+}

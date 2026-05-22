@@ -43,12 +43,58 @@
 
                         <uui-button look="primary"
                                     color="positive"
+                                    label="Update"
                                     ng-click="vm.updateProperty(item)"
                                     ng-attr-state="{{item.isUpdating ? 'waiting' : undefined}}">
                             Update
                         </uui-button>
+
+                        <uui-button look="secondary"
+                                    color="default"
+                                    label="Check"
+                                    ng-click="vm.checkMigration(item)"
+                                    ng-attr-state="{{item.isChecking ? 'waiting' : undefined}}"
+                                    ng-disabled="!item.hasDuplicate && (!item.newAlias || item.newAlias.trim() === '')">
+                            Check
+                        </uui-button>
                     </div>
 
+                    <div ng-if="item.checkResults" style="margin-top: 12px;">
+                        <div ng-if="item.checkResults.length > 0" style="margin-bottom: 8px; padding: 8px 12px; border-radius: 4px;"
+                             ng-style="(item.checkResults | filter:{match:false}).length === 0 ? {'background':'#d4edda','border':'1px solid #c3e6cb','color':'#155724'} : {'background':'#f8d7da','border':'1px solid #f5c6cb','color':'#721c24'}">
+                            <strong>{{item.checkResults.length}} pagina's gevonden.</strong>
+                            <span ng-if="(item.checkResults | filter:{match:false}).length === 0">
+                                Alles correct gemigreerd &#10003;
+                            </span>
+                            <span ng-if="(item.checkResults | filter:{match:false}).length > 0">
+                                <strong>{{(item.checkResults | filter:{match:false}).length}} met fouten</strong> — zie lijst hieronder &#9888;
+                            </span>
+                        </div>
+                        <div ng-if="item.checkResults.length === 0" style="margin-top: 6px; color: #73716e;">
+                            <em>Geen nodes gevonden voor dit document type.</em>
+                        </div>
+                        <div ng-if="item.checkResults.length > 0" style="margin-top: 4px;">
+                            <a href="" ng-click="item.showCheckDetails = !item.showCheckDetails; $event.preventDefault()"
+                               style="font-size: 0.9em; text-decoration: none; color: #1a73e8;">
+                                <span ng-if="!item.showCheckDetails">&#9660; Toon details</span>
+                                <span ng-if="item.showCheckDetails">&#9650; Verberg details</span>
+                            </a>
+                        </div>
+                        <ul ng-if="item.showCheckDetails" style="list-style: none; margin: 8px 0 0 0; padding: 0;">
+                            <li ng-repeat="r in item.checkResults track by $index"
+                                style="padding: 5px 8px; margin-bottom: 4px; border-radius: 3px; font-size: 0.92em;"
+                                ng-style="r.match ? {'background':'#d4edda','border':'1px solid #c3e6cb','color':'#155724'} : {'background':'#f8d7da','border':'1px solid #f5c6cb','color':'#721c24'}">
+                                <a href="/umbraco/#/content/content/edit/{{r.nodeId}}" target="_blank" style="color: inherit; font-weight: bold;">{{r.nodeName}}</a>
+                                &nbsp;&mdash;&nbsp;
+                                Nested Content <em>'{{item.propertyAlias}}'</em>: <strong>{{r.ncCount}}</strong> items
+                                &nbsp;VS&nbsp;
+                                BlockList: <strong>{{r.blCount}}</strong> items
+                                &nbsp;
+                                <span ng-if="r.match">&#10003;</span>
+                                <span ng-if="!r.match">&#9888; Verschil!</span>
+                            </li>
+                        </ul>
+                    </div>
 
                 </uui-box>
 
@@ -62,6 +108,105 @@
                         <i class="{{logEntry.Content.icon}}"></i> <a href="/Umbraco/#/{{logEntry.editUrl}}">{{logEntry.Content.name}} <span ng-if="logEntry.comment">- {{logEntry.comment}}</span></a> - <span style="color: #73716e;" class="text-muted">Edited on: {{logEntry.timestamp  | date:'medium'}}</span>
                     </li>
                 </ul>
+            </uui-box>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 2rem;">
+        <h3 class="bold ng-scope">Media Picker Migratie</h3>
+        <p>Overzicht van alle data types die nog de oude Media Picker gebruiken. Migreer ze naar <strong>Umbraco.MediaPicker3</strong>.</p>
+
+        <div class="column span8" style="margin: 1rem 0;">
+            <umb-load-indicator ng-if="vm.mpLoading"></umb-load-indicator>
+
+            <div ng-if="!vm.mpLoading">
+                <div ng-if="vm.mpAuditResult.length === 0"
+                     style="padding: 1rem; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724;">
+                    <strong>✓ Alles up-to-date!</strong> Geen oude media pickers gevonden.
+                </div>
+
+                <uui-box headline="Data Type: {{item.name}}"
+                         ng-repeat="item in vm.mpAuditResult track by $index"
+                         style="margin: 1rem 0;">
+
+                    <!-- Needs full alias migration -->
+                    <div ng-if="!item.needsConfigFix" style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                        <strong>Type:</strong>
+                        <span style="background: #fff3cd; border: 1px solid #ffeeba; border-radius: 3px; padding: 2px 10px; color: #856404;">
+                            {{item.editorAlias}}
+                        </span>
+                        <span>&rarr;</span>
+                        <span style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 3px; padding: 2px 10px; color: #155724;">
+                            Umbraco.MediaPicker3
+                        </span>
+                    </div>
+
+                    <!-- Already MediaPicker3 but Multiple config missing -->
+                    <div ng-if="item.needsConfigFix" style="margin-bottom: 12px; padding: 8px 12px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px; color: #856404;">
+                        <strong>⚠ Config reparatie nodig</strong> — al omgezet naar MediaPicker3 maar <em>Pick multiple items</em> staat nog niet aan.
+                    </div>
+
+                    <div ng-if="item.usages.length > 0">
+                        <strong>Gebruikt door:</strong>
+                        <ul style="margin: 6px 0 0 0; padding-left: 1.4rem;">
+                            <li ng-repeat="u in item.usages" style="padding: 2px 0;">
+                                <strong>{{u.contentTypeAlias}}</strong> &rarr; {{u.propertyName}}
+                                <small style="color: #73716e;">({{u.propertyAlias}})</small>
+                            </li>
+                        </ul>
+                    </div>
+                    <div ng-if="item.usages.length === 0" style="color: #73716e;">
+                        <em>Niet in gebruik bij een content type.</em>
+                    </div>
+                </uui-box>
+
+                <div ng-if="vm.mpAuditResult.length > 0" style="margin-top: 1rem;">
+                    <uui-button look="primary"
+                                color="positive"
+                                label="Migreer alle naar MediaPicker3"
+                                ng-click="vm.fixMediaPickers()"
+                                ng-attr-state="{{vm.mpFixing ? 'waiting' : undefined}}">
+                        Migreer alle naar MediaPicker3
+                    </uui-button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 2rem;">
+        <h3 class="bold ng-scope">Database Schema Gezondheid</h3>
+        <p>Controleert of alle benodigde database kolommen aanwezig zijn. Ontbrekende kolommen kunnen ontstaan wanneer migraties zijn overgeslagen.</p>
+
+        <div class="column span6" style="margin: 1rem 0;">
+            <umb-load-indicator ng-if="vm.schemaLoading"></umb-load-indicator>
+
+            <uui-box ng-if="!vm.schemaLoading">
+                <div ng-repeat="check in vm.schemaChecks" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                    <div>
+                        <strong>{{check.table}}.{{check.column}}</strong>
+                        <small style="color: #73716e; margin-left: 8px;">{{check.dataType}}</small>
+                    </div>
+                    <div ng-if="check.exists" style="color: #155724; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; padding: 2px 10px;">
+                        ✓ Aanwezig
+                    </div>
+                    <div ng-if="!check.exists" style="color: #856404; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px; padding: 2px 10px;">
+                        ⚠ Ontbreekt
+                    </div>
+                </div>
+
+                <div ng-if="vm.schemaChecks.length === 0" style="color: #73716e;">
+                    Geen checks gevonden.
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <uui-button look="primary"
+                                color="warning"
+                                label="Repareer ontbrekende kolommen"
+                                ng-click="vm.fixSchema()"
+                                ng-attr-state="{{vm.schemaFixing ? 'waiting' : undefined}}">
+                        Repareer ontbrekende kolommen
+                    </uui-button>
+                </div>
             </uui-box>
         </div>
     </div>

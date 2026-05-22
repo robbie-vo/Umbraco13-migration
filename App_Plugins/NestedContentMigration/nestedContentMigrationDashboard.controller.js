@@ -1,4 +1,4 @@
-angular.module("umbraco").controller("NestedContentMigrationDashboardController", function ($scope, userService, logResource, entityResource, ncResource, notificationsService) {
+angular.module("umbraco").controller("NestedContentMigrationDashboardController", function (userService, logResource, entityResource, ncResource, notificationsService) {
 
     var vm = this;
     vm.UserName = "guest";
@@ -26,7 +26,7 @@ angular.module("umbraco").controller("NestedContentMigrationDashboardController"
                     if (nodesWeKnowAbout.includes(item.nodeId) || !supportedEntityTypes.includes(item.entityType)) {
                         return;
                     }
-                    if (item.logType !== "Save" && item.logType !== "Publish") {
+                    if (item.logType !== "Save" && item.logType !== "Publish" && item.logType !== "SavePublish") {
                         return;
                     }
                     if (item.nodeId < 0) {
@@ -50,6 +50,8 @@ angular.module("umbraco").controller("NestedContentMigrationDashboardController"
                 });
 
                 vm.UserLogHistory.items = filteredLogEntries;
+            }, function (error) {
+                console.error("Fout bij laden van logs:", error);
             });
     };
 
@@ -63,9 +65,89 @@ angular.module("umbraco").controller("NestedContentMigrationDashboardController"
     ncResource.getAll().then(function (response) {
         vm.AuditResult = response || [];
         vm.loading = false;
-    }).catch(function (error) {
+    }).catch(function () {
         vm.loading = false;
     });
+
+    vm.mpAuditResult = [];
+    vm.mpLoading = true;
+    vm.mpFixing = false;
+
+    vm.loadMediaPickerAudit = function () {
+        vm.mpLoading = true;
+        ncResource.mediaPickerAudit().then(function (response) {
+            vm.mpAuditResult = response || [];
+            vm.mpLoading = false;
+        }).catch(function () {
+            vm.mpLoading = false;
+        });
+    };
+
+    vm.loadMediaPickerAudit();
+
+    vm.fixMediaPickers = function () {
+        vm.mpFixing = true;
+        ncResource.mediaPickerFix().then(function (response) {
+            notificationsService.success("Succes", response.message);
+            vm.loadMediaPickerAudit();
+            vm.mpFixing = false;
+        }).catch(function () {
+            notificationsService.error("Fout", "Media picker migratie mislukt.");
+            vm.mpFixing = false;
+        });
+    };
+
+    vm.schemaChecks = [];
+    vm.schemaLoading = true;
+    vm.schemaFixing = false;
+
+    vm.loadSchemaChecks = function () {
+        vm.schemaLoading = true;
+        ncResource.schemaCheck().then(function (response) {
+            vm.schemaChecks = response || [];
+            vm.schemaLoading = false;
+        }).catch(function () {
+            vm.schemaLoading = false;
+        });
+    };
+
+    vm.loadSchemaChecks();
+
+    vm.fixSchema = function () {
+        vm.schemaFixing = true;
+        ncResource.schemaFix().then(function (response) {
+            var count = (response.fixed_ || []).length;
+            if (count > 0) {
+                notificationsService.success("Schema gerepareerd", count + " kolom(men) toegevoegd.");
+            } else {
+                notificationsService.info("Niets te repareren", "Alle kolommen zijn al aanwezig.");
+            }
+            vm.loadSchemaChecks();
+            vm.schemaFixing = false;
+        }).catch(function () {
+            notificationsService.error("Fout", "Schema reparatie mislukt.");
+            vm.schemaFixing = false;
+        });
+    };
+
+    vm.checkMigration = function (item) {
+        var blAlias = item.duplicateAlias || item.newAlias;
+        if (!blAlias || blAlias.trim() === '') {
+            notificationsService.error("Validatie fout", "Geen BlockList alias beschikbaar. Voer de migratie eerst uit of voer een alias in.");
+            return;
+        }
+
+        item.isChecking = true;
+        item.checkResults = null;
+
+        ncResource.contentCheck(item.docTypeAlias, item.propertyAlias, blAlias).then(function (response) {
+            item.checkResults = response || [];
+            item.isChecking = false;
+        }).catch(function () {
+            notificationsService.error("Fout", "Content check mislukt.");
+            item.isChecking = false;
+        });
+    };
 
     vm.updateProperty = function (item) {
         // Validatie: check of er een nieuwe alias is ingevoerd
@@ -84,19 +166,22 @@ angular.module("umbraco").controller("NestedContentMigrationDashboardController"
         };
 
         ncResource.update(postData).then(function (response) {
-            notificationsService.success("Succes", "De property is bijgewerkt.");
+            if (response && response.errorCount > 0) {
+                notificationsService.warning("Migratie voltooid met fouten", response.message + " Controleer het Umbraco logboek voor details.");
+            } else {
+                notificationsService.success("Succes", response ? response.message : "De property is bijgewerkt.");
+            }
             vm.loadUserLogs();
 
-            // Ververs de audit data om de status indicators bij te werken
             ncResource.getAll().then(function (auditResponse) {
                 vm.AuditResult = auditResponse || [];
+            }, function () {
+                vm.AuditResult = [];
             });
 
-            // Verwijder loading state na succesvolle update
             item.isUpdating = false;
-        }, function (error) {
+        }, function () {
             notificationsService.error("Fout", "Er ging iets mis bij het updaten.");
-            // Verwijder loading state ook bij een fout
             item.isUpdating = false;
         });
     };

@@ -1,0 +1,90 @@
+<div class="welcome-dashboard" ng-controller="MediaPickerMigrationDashboardController as vm">
+
+    <div class="row">
+        <h3 class="bold ng-scope">Media Picker Migratie</h3>
+        <p>Overzicht van alle data types die nog het oude Media Picker format gebruiken (<code>Umbraco.MediaPicker</code> / <code>Umbraco.MultipleMediaPicker</code>). Gebruik de Fix-knop om ze bij te werken naar <code>Umbraco.MediaPicker3</code>.</p>
+    </div>
+
+    <div class="row ng-scope">
+        <div class="column span12">
+            <div style="margin: 2rem 0;">
+
+                <umb-load-indicator ng-if="vm.loading"></umb-load-indicator>
+
+                <div ng-if="!vm.loading && vm.auditResult.length === 0" style="padding: 16px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724;">
+                    <strong>✓ Alles up-to-date!</strong> Er zijn geen oude Media Picker data types gevonden.
+                </div>
+
+                <uui-box ng-repeat="item in vm.auditResult track by $index"
+                         headline="{{item.dataTypeName}}"
+                         style="margin: 2rem 0;">
+
+                    <div style="margin-bottom: 8px;">
+                        <strong>Editor alias:</strong>
+                        <code>{{item.editorAlias}}</code>
+                        &nbsp;
+                        <span style="display:inline-block; padding: 2px 8px; border-radius: 3px; font-size: 12px;"
+                              ng-style="item.isMultiple ? {'background':'#cce5ff','color':'#004085'} : {'background':'#e2e3e5','color':'#383d41'}">
+                            {{item.isMultiple ? 'Meerdere' : 'Enkelvoudig'}}
+                        </span>
+                    </div>
+
+                    <!-- Migrated state -->
+                    <div ng-if="item.isFixed"
+                         style="margin: 10px 0; padding: 10px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724;">
+                        <strong>✓ Bijgewerkt naar Umbraco.MediaPicker3</strong><br />
+                        <small>Herstart de applicatie om de wijziging volledig door te voeren.</small>
+                    </div>
+
+                    <!-- Not yet migrated state -->
+                    <div ng-if="!item.isFixed"
+                         style="margin: 10px 0; padding: 10px; background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px; color: #856404;">
+                        <strong>⚠ Nog niet bijgewerkt</strong>
+                    </div>
+
+                    <!-- Usages table -->
+                    <div ng-if="item.usages.length > 0" style="margin-top: 12px;">
+                        <strong>Gebruikt in {{item.usages.length}} {{item.usages.length === 1 ? 'property' : 'properties'}}:</strong>
+                        <table style="width:100%; margin-top: 8px; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f4f3f2;">
+                                    <th style="text-align:left; padding: 6px 10px; border-bottom: 1px solid #ddd;">Document type</th>
+                                    <th style="text-align:left; padding: 6px 10px; border-bottom: 1px solid #ddd;">Property name</th>
+                                    <th style="text-align:left; padding: 6px 10px; border-bottom: 1px solid #ddd;">Property alias</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="usage in item.usages track by $index"
+                                    ng-style="{'background': $even ? '#fff' : '#fafafa'}">
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #eee;">
+                                        <code>{{usage.docTypeAlias}}</code>
+                                        <span style="color:#73716e; font-size:12px;"> ({{usage.docTypeName}})</span>
+                                    </td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #eee;">{{usage.propertyName}}</td>
+                                    <td style="padding: 6px 10px; border-bottom: 1px solid #eee;"><code>{{usage.propertyAlias}}</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div ng-if="item.usages.length === 0" style="margin-top: 8px; color: #73716e; font-style: italic;">
+                        Niet gebruikt in enig document type.
+                    </div>
+
+                    <!-- Fix button -->
+                    <div style="margin-top: 16px;" ng-if="!item.isFixed">
+                        <uui-button look="primary"
+                                    color="positive"
+                                    ng-click="vm.fix(item)"
+                                    ng-attr-state="{{item.isFixing ? 'waiting' : undefined}}">
+                            Bijwerken naar MediaPicker3
+                        </uui-button>
+                    </div>
+
+                </uui-box>
+
+            </div>
+        </div>
+    </div>
+
+</div>

@@ -1,8 +1,9 @@
 {
   "dashboards": [
     {
-      "alias": "dashboard",
+      "alias": "nestedContentMigrationDashboard",
       "view": "/App_Plugins/NestedContentMigration/Dashboard.html",
+      "label": "Migreer oude media pickers",
       "sections": [ "content" ],
       "weight": -10,
       "access": [
