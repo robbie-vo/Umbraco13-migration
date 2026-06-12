@@ -43,6 +43,12 @@ angular.module('umbraco.resources').factory('ncResource',
                 return umbRequestHelper.resourcePromise(
                     $http.post("api/migration/mediapickerfix", {}),
                     "Failed to fix media pickers");
+            },
+
+            cleanupVersions: function () {
+                return umbRequestHelper.resourcePromise(
+                    $http.post("api/migration/cleanupversions", {}),
+                    "Failed to cleanup versions");
             }
         };
     }

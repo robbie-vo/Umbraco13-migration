@@ -28,6 +28,7 @@ namespace UmbracoVO.Controllers
         private readonly PropertyEditorCollection _propertyEditors;
         private readonly IScopeProvider _scopeProvider;
         private readonly ILogger<MigrationController> _logger;
+        private readonly IContentVersionService _contentVersionService;
 
         // Known columns that may be missing when migrations were bypassed
         private static readonly List<SchemaColumnCheck> KnownColumnChecks = new()
@@ -50,7 +51,8 @@ namespace UmbracoVO.Controllers
         IShortStringHelper shortStringHelper,
         PropertyEditorCollection propertyEditors,
         IScopeProvider scopeProvider,
-        ILogger<MigrationController> logger)
+        ILogger<MigrationController> logger,
+        IContentVersionService contentVersionService)
         {
             _contentService = contentService;
             _contentTypeService = contentTypeService;
@@ -60,6 +62,7 @@ namespace UmbracoVO.Controllers
             _propertyEditors = propertyEditors;
             _scopeProvider = scopeProvider;
             _logger = logger;
+            _contentVersionService = contentVersionService;
         }
 
 
@@ -777,6 +780,27 @@ namespace UmbracoVO.Controllers
 
             return Ok(new { message = $"{count} media picker(s) bijgewerkt.", count });
         }
+
+        [HttpPost]
+        public async Task<IActionResult> CleanupVersions()
+        {
+            _logger.LogInformation("Versie opschoning handmatig gestart via dashboard.");
+            try
+            {
+                var result = await _contentVersionService.PerformContentVersionCleanup(DateTime.Now);
+                _logger.LogInformation("Versie opschoning voltooid: {Deleted} versies verwijderd.", result.DeletedVersionCount);
+                return Ok(new
+                {
+                    message = $"{result.DeletedVersionCount} versies verwijderd.",
+                    deletedVersionCount = result.DeletedVersionCount
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Versie opschoning mislukt.");
+                return StatusCode(500, $"Versie opschoning mislukt: {ex.Message}");
+            }
+        }
     }
 
     public class SchemaColumnCheck
@@ -813,5 +837,6 @@ namespace UmbracoVO.Controllers
         [JsonProperty("newAlias")]
         public string NewAlias { get; set; } = string.Empty;
     }
+
 }
 

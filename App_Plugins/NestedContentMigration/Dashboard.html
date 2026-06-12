@@ -211,5 +211,36 @@
         </div>
     </div>
 
+    <div class="row" style="margin-top: 2rem;">
+        <h3 class="bold ng-scope">Content Versie Opschoning</h3>
+        <p>Verwijder oude content versies handmatig. De huidige draft en gepubliceerde versie worden altijd bewaard.</p>
+
+        <div class="column span6" style="margin: 1rem 0;">
+            <uui-box>
+                <div style="margin-bottom: 12px; padding: 8px 12px; background: #f0f4ff; border: 1px solid #c8d6f7; border-radius: 4px; font-size: 0.9em; color: #444;">
+                    Het aantal te bewaren versies is instelbaar via <code>appsettings.json</code>:<br />
+                    <code>Umbraco:CMS:Content:ContentVersionCleanupPolicy:DefaultNumberOfVersionsPerDocument</code>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <uui-button look="primary"
+                                color="danger"
+                                label="Verwijder oude versies"
+                                ng-click="vm.runVersionCleanup()"
+                                ng-attr-state="{{vm.versionCleanupRunning ? 'waiting' : undefined}}">
+                        Verwijder oude versies
+                    </uui-button>
+                </div>
+
+                <div ng-if="vm.versionCleanupResult" style="margin-top: 14px; padding: 10px 14px; border-radius: 4px;"
+                     ng-style="vm.versionCleanupResult.errorCount > 0 ? {'background':'#fff3cd','border':'1px solid #ffeeba','color':'#856404'} : {'background':'#d4edda','border':'1px solid #c3e6cb','color':'#155724'}">
+                    <strong>{{vm.versionCleanupResult.message}}</strong>
+                    <div ng-if="vm.versionCleanupResult.errorCount > 0" style="margin-top: 4px; font-size: 0.9em;">
+                        Bekijk het Umbraco logboek voor details over de fouten.
+                    </div>
+                </div>
+            </uui-box>
+        </div>
+    </div>
+
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@latest/dist/uui.min.js"></script>

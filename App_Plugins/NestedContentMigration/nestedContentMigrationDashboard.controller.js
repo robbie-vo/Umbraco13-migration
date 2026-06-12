@@ -130,6 +130,27 @@ angular.module("umbraco").controller("NestedContentMigrationDashboardController"
         });
     };
 
+    vm.versionCleanupRunning = false;
+    vm.versionCleanupResult = null;
+
+    vm.runVersionCleanup = function () {
+        vm.versionCleanupRunning = true;
+        vm.versionCleanupResult = null;
+
+        ncResource.cleanupVersions().then(function (response) {
+            vm.versionCleanupResult = response;
+            if (response.errorCount > 0) {
+                notificationsService.warning("Opschoning voltooid met fouten", response.message);
+            } else {
+                notificationsService.success("Succes", response.message);
+            }
+            vm.versionCleanupRunning = false;
+        }).catch(function () {
+            notificationsService.error("Fout", "Versie opschoning mislukt.");
+            vm.versionCleanupRunning = false;
+        });
+    };
+
     vm.checkMigration = function (item) {
         var blAlias = item.duplicateAlias || item.newAlias;
         if (!blAlias || blAlias.trim() === '') {
