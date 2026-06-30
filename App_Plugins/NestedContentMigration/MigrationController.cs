@@ -377,7 +377,7 @@ namespace UmbracoVO.Controllers
                     blockConfigs.Add(new BlockListConfiguration.BlockConfiguration
                     {
                         ContentElementTypeKey = element.Key,
-                        Label = ncType.TabAlias ?? "{{name}}"
+                        Label = ncType.Template ?? ""
                     });
                 }
             }
