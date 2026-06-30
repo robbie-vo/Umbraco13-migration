@@ -405,6 +405,8 @@ namespace UmbracoVO.Controllers
             var propertyType = new PropertyType(_shortStringHelper, dataType, alias)
             {
                 Name = name,
+                Description = oldProperty?.Description,
+                SortOrder = oldProperty?.SortOrder ?? 0,
                 Variations = oldProperty?.Variations ?? ContentVariation.Nothing
             };
 
